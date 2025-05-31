@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<head>
+    <title>Forms EJS</title> 
+</head>
+<body>
+    <h1>Enter your Information</h1>
+    <form action = "/submit" , method="post">
+        <div>
+        <label for="name">Name:</label>
+        <input type="text" id = "Name" name = "name">
+    </div>
+    <div>
+        <label for = "email">Email:</label>
+        <input type  ="email" id = "email" name = 'email'>
+    </div>
+    <button type="submit">Submit</button>
+    </form>
+
+    <% if(formdata) { %>
+        <h2>You Submit</h2>
+        <p>Name : <%= formdata.name %></p>
+        <p>Email :<%= formdata.email %></p>
+        <% } %>
+</body>
+</html>
