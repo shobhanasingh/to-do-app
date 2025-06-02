@@ -18,6 +18,9 @@ router.get('/', async(req,res) => {
 //Create TODO
 router.post('/', async(req,res) => {
 try {
+    if(!req.body.task){
+        return res.status(400).json({message:'Task can not be blank'})
+    }
     const newtodo =  new Todo({text: req.body.task});
     const savedtodo = await newtodo.save();
     res.status(201).json(savedtodo)
