@@ -1,5 +1,5 @@
 const { router } = require("./todo");
-const { Todo } = require("./schema");
+const { Todo, priorities } = require("./schema");
 const mongoose = require("mongoose");
 const auth = require("../middleware/auth");
 
@@ -17,25 +17,30 @@ const auth = require("../middleware/auth");
 
 //Get todo with pagination
 
-//Get todo
 router.get("/", auth, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 5;
     const skip = (page - 1) * limit;
-    const total = await Todo.countDocuments({ user: req.userId });
-    const todos = await Todo.find({ user: req.userId })
-      .limit(limit)
-      .skip(skip)
-      .sort({ createdAt: -1 });
+
+    const filter = { user: req.userId };
+    if (req.query.priority) {
+      filter.priority = req.query.priority.toLowerCase();
+    }
+    const total = await Todo.countDocuments(filter);
+    const todos = await Todo.find(filter).limit(limit).skip(skip);
+
     res.status(200).json({
       totalItems: total,
       currentPage: page,
-      totalPages: total / limit,
+      totalPages: Math.ceil(total / limit),
       todos,
     });
   } catch (err) {
     console.log(err);
+    if (todos.length === 0) {
+      return res.status(200).json({ message: "No todos found", todos: [] });
+    }
     res.status(500).json({ error: "Server Error" });
   }
 });
@@ -45,7 +50,11 @@ router.post("/", auth, async (req, res) => {
     if (!req.body.task) {
       return res.status(400).json({ message: "Task can not be blank" });
     }
-    const newtodo = new Todo({ text: req.body.task, user: req.userId });
+    const newtodo = new Todo({
+      text: req.body.task,
+      user: req.userId,
+      priority: req.body?.priority || priorities[0],
+    });
     const savedtodo = await newtodo.save();
     res.status(201).json(savedtodo);
   } catch (err) {
@@ -97,10 +106,10 @@ router.put("/:id", auth, async (req, res) => {
       return res.status(400).json({ message: "not a valid id" });
     }
 
-    const { text, completed } = req.body;
+    const { text, completed, priority } = req.body;
     const todo = await Todo.findOneAndUpdate(
       { _id: id, user: req.userId },
-      { text: text, completed: completed },
+      { text: text, completed: completed, priority: priority },
       { new: true },
     );
     if (!todo)
