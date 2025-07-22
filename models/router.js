@@ -1,6 +1,12 @@
 const { router } = require("./todo");
 const { Todo, priorities } = require("./schema");
 const mongoose = require("mongoose");
+const {
+  createTodoValidator,
+  updateTodoValidator,
+  todoQueryValidator,
+} = require("../middleware/validators/todoValidator");
+const validate = require("../middleware/validators/validate");
 const auth = require("../middleware/auth");
 
 //Get todo
@@ -17,7 +23,7 @@ const auth = require("../middleware/auth");
 
 //Get todo with pagination
 
-router.get("/", auth, async (req, res) => {
+router.get("/", auth, todoQueryValidator, validate, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 5;
@@ -38,14 +44,11 @@ router.get("/", auth, async (req, res) => {
     });
   } catch (err) {
     console.log(err);
-    if (todos.length === 0) {
-      return res.status(200).json({ message: "No todos found", todos: [] });
-    }
     res.status(500).json({ error: "Server Error" });
   }
 });
 //Create TODO
-router.post("/", auth, async (req, res) => {
+router.post("/", auth, createTodoValidator, validate, async (req, res) => {
   try {
     if (!req.body.task) {
       return res.status(400).json({ message: "Task can not be blank" });
@@ -99,7 +102,7 @@ router.get("/:id", auth, async (req, res) => {
 });
 
 //Update To-Do
-router.put("/:id", auth, async (req, res) => {
+router.put("/:id", auth, updateTodoValidator, validate, async (req, res) => {
   try {
     const id = req.params.id;
     if (!mongoose.Types.ObjectId.isValid(id)) {
