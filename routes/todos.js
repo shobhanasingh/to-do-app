@@ -1,5 +1,7 @@
-const { router } = require("./todo");
-const { Todo, priorities } = require("./schema");
+//const { router } = require("../models/todo");
+const express = require("express");
+const router = express.Router();
+const { Todo, priorities } = require("../models/todo");
 const mongoose = require("mongoose");
 const {
   createTodoValidator,
